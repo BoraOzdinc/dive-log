@@ -39,9 +39,16 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session({ session, user }) {
+    jwt({ user, token }) {
+      // since we are using jwt strategy, we need to add user id to the token, so that we can use it in session callback
+      if (user) {
+        token.userId = user.id;
+      }
+      return token;
+    },
+    session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id;
+        session.user.id = token.userId as string;
         // session.user.role = user.role; <-- put other properties on the session here
       }
       return session;
@@ -54,25 +61,40 @@ export const authOptions: NextAuthOptions = {
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
     CredentialsProvider({
-
-    name: "Credentials",
-    credentials: {
-      
-      email: { label: "email", type: "text" },
-      password: { label: "password", type: "password" }
-    },
-    async authorize(credentials, req) {
-      console.log("authorization")
-              // Add logic here to look up the user from the credentials supplied
-              const user = { id: 1, name: "J Smith", email: "jsmith@example.com" }
-              if(credentials?.email=="test@gmail.com" && credentials?.password=="hello123"){
-                return user
-              }else{
-                return null;
-              }
-            }
-    })
-  ]
+      name: "Credentials",
+      credentials: {
+        email: { label: "email", type: "text" },
+        password: { label: "password", type: "password" },
+      },
+      async authorize(credentials) {
+        console.log("authorization");
+        // Add logic here to look up the user from the credentials supplied
+        if (
+          !(
+            credentials?.email === "test@gmail.com" &&
+            credentials?.password === "hello123"
+          )
+        ) {
+          console.log("authorization failed, credentials not valid");
+          return null;
+        }
+        // get user or create user if not exists
+        const user = await prisma.user.upsert({
+          where: { email: credentials.email },
+          update: {},
+          create: {
+            email: credentials.email,
+            name: "Test-Bora",
+          },
+        });
+        return user;
+      },
+    }),
+  ],
+  session: {
+    // this is important due to CredentialsProvider
+    strategy: "jwt",
+  },
 };
 
 /**
