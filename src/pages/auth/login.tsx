@@ -6,12 +6,12 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 
 interface Values {
-  username: string;
+  email: string;
   password: string;
 }
 
 const LoginSchema = Yup.object().shape({
-  username: Yup.string()
+  email: Yup.string()
     .min(2, "Kullanıcı Adı Çok Kısa!")
     .max(50, "Kullanıcı Adı Çok Uzun!")
     .required("Kullanıcı Adı Alanı Boş!"),
@@ -37,11 +37,11 @@ const LoginComponent: React.FC = () => {
   return (
     <>
       <Formik
-        initialValues={{ username: "", password: "" }}
+        initialValues={{ email: "", password: "" }}
         validationSchema={LoginSchema}
         onSubmit={async (values: Values) => {
           await signIn("credentials", {
-            username: values.username,
+            email: values.email,
             password: values.password,
             redirect: false,
             callbackUrl: "/",
@@ -52,7 +52,7 @@ const LoginComponent: React.FC = () => {
           <Form>
             <div className="flex flex-col  justify-center">
               <div className="mt-2 flex flex-col">
-                <label htmlFor="username">Kullanıcı Adı</label>
+                <label htmlFor="email">E-Posta</label>
                 <Field
                   className={`input rounded p-3 ${
                     errors.username && touched.username
@@ -60,8 +60,8 @@ const LoginComponent: React.FC = () => {
                       : "input-success"
                   }`}
                   type="text"
-                  name="username"
-                  id="username"
+                  name="email"
+                  id="email"
                   placeholder="Kullanıcı Adı"
                 />
               </div>

@@ -58,36 +58,21 @@ export const authOptions: NextAuthOptions = {
     name: "Credentials",
     credentials: {
       
-      email: { label: "Username", type: "text", placeholder: "jsmith" },
-      password: { label: "Password", type: "password" }
+      email: { label: "email", type: "text" },
+      password: { label: "password", type: "password" }
     },
     async authorize(credentials, req) {
-      try {
-        const { email, password } = credentials as { email: string; password: string };
-
-        // const response = await postFetchNoInterceptor({ fetchData: { email, password }, url: apiAuth });
-
-        // const { data: { body: { message = '', token = '', user = {} } = {}, statusCode = 0 } = {} } = response;
-
-        // if (statusCode === 200) {
-        //     return { ...user, name: user.full_name, token: token };
-        // }
-
-        // throw new Error(message);
-
-        // TEST
-        if (email !== 'boraozdinc@hotmail.com' || password !== '12345678') {
-            throw new Error('Next Auth - Authorize: Authentication error');
-        }
-
-        // TEST
-        return Promise.resolve({ email: 'boraozdinc@hotmail.com', id: '123', name: 'Kevin Veiga', role: 'user', token: 'poi654çlk' });
-    } catch (err) {
-        throw new Error('Next Auth - Authorize: Authentication error');
-    }
-      
-    }
-  })],
+      console.log("authorization")
+              // Add logic here to look up the user from the credentials supplied
+              const user = { id: 1, name: "J Smith", email: "jsmith@example.com" }
+              if(credentials?.email=="test@gmail.com" && credentials?.password=="hello123"){
+                return user
+              }else{
+                return null;
+              }
+            }
+    })
+  ]
 };
 
 /**
