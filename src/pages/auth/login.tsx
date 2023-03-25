@@ -50,19 +50,17 @@ const LoginComponent: React.FC = () => {
         initialValues={{ email: "", password: "" }}
         validationSchema={toFormikValidationSchema(userSchema)}
         onSubmit={async (values: Values) => {
-          await signIn("credentials", {
+          const res = await signIn("credentials", {
             email: values.email,
             password: values.password,
             redirect: false,
             callbackUrl: "/auth/login",
-          }).then(({ ok, error }) => {
-            if (ok) {
-              router.reload();
-            } else {
-              console.log(error);
-              setErr("E-Posta veya Şifre yanlış!");
-            }
           });
+          if (res?.error) {
+            setErr("E-Posta yada Şifre yanlış!");
+          } else if (res?.ok) {
+            setErr("Başarılı Yönlendiriliyorsunuz");
+          }
         }}
       >
         {(formikState) => {
