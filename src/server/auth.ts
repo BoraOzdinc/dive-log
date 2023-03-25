@@ -84,7 +84,8 @@ export const authOptions: NextAuthOptions = {
           update: {},
           create: {
             email: credentials.email,
-            name: "Test-Bora",
+            username: "",
+            passwordHash: credentials.password,
           },
         });
         return user;
