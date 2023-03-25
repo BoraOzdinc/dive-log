@@ -9,7 +9,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
-import { getUser, getUsers } from "~/utils/useAuth";
+
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -67,15 +67,24 @@ export const authOptions: NextAuthOptions = {
         password: { label: "password", type: "password" },
       },
       async authorize(credentials) {
+        if(credentials){
         console.log("authorization");
         // Add logic here to look up the user from the credentials supplied
+        const userFromEmail = await prisma.user.findFirst(
+          {
+            where:{email: credentials.email}
+          }
+        )
         if (
           !(
-            credentials?.email === "test@gmail.com" &&
-            credentials?.password === "hello123"
+            userFromEmail
           )
         ) {
-          console.log("authorization failed, credentials not valid");
+          console.log("authorization failed, wrong email");
+          return null;
+        }
+        if(userFromEmail.passwordHash !== credentials.password) {
+          console.log("authorization failed | wrong password ")
           return null;
         }
         // get user or create user if not exists
@@ -88,9 +97,10 @@ export const authOptions: NextAuthOptions = {
             passwordHash: credentials.password,
           },
         });
+        console.log(user)
         return user;
-      },
-    }),
+      }else{return null}
+    }}),
   ],
   session: {
     // this is important due to CredentialsProvider

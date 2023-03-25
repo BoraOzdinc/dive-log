@@ -33,7 +33,7 @@ const User: React.FC = () => {
     <>
       <main className="container mx-auto py-20 text-center">
         <h3>authorized user</h3>
-        <h4>Hi {session?.user.name}</h4>
+        <h4>Hi {session?.user.email}</h4>
         <Link className="btn" href={"/user/profile"}>
           Profil
         </Link>

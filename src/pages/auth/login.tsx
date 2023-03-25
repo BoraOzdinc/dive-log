@@ -1,25 +1,32 @@
-import type { NextPage } from "next";
+import type { GetServerSideProps, NextPage } from "next";
 import { Formik, Field, Form, type FormikHelpers } from "formik";
-import * as Yup from "yup";
+
 import { Layout } from "~/components/Layout";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import classNames from "classnames";
+import { useRouter } from "next/router";
+import { TypeOf, z } from "zod";
+import { toFormikValidationSchema } from "zod-formik-adapter";
+import { useState } from "react";
 
 interface Values {
   email: string;
   password: string;
 }
 
-const LoginSchema = Yup.object().shape({
-  email: Yup.string()
-    .min(2, "Kullanıcı Adı Çok Kısa!")
-    .max(50, "Kullanıcı Adı Çok Uzun!")
-    .required("Kullanıcı Adı Alanı Boş!"),
-  password: Yup.string()
-    .min(3, "Şifre En Az 8 Karakter Olmalı!")
-    .max(60, "Şifre Çok Uzun!")
-    .required("Şifre Alanı Boş!"),
+const userSchema = z.object({
+  email: z
+    .string({ required_error: "Lütfen E-Posta giriniz!" })
+    .email("Geçerli bir E-Posta adresi girin!"),
+  password: z
+    .string({ required_error: "Lütfen şifrenizi girin!" })
+    .min(8, "Şifre en az 8 karekter olmalı!")
+    .max(150, "Şifre çok uzun"),
 });
+
+type userFormInputs = TypeOf<typeof userSchema>;
 
 const Login: NextPage = () => {
   return (
@@ -34,69 +41,91 @@ const Login: NextPage = () => {
 };
 
 const LoginComponent: React.FC = () => {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [err, setErr] = useState("");
   return (
     <>
       <Formik
         initialValues={{ email: "", password: "" }}
-        validationSchema={LoginSchema}
+        validationSchema={toFormikValidationSchema(userSchema)}
         onSubmit={async (values: Values) => {
           await signIn("credentials", {
             email: values.email,
             password: values.password,
             redirect: false,
-            callbackUrl: "/",
+            callbackUrl: "/auth/login",
+          }).then(({ ok, error }) => {
+            if (ok) {
+              router.reload();
+            } else {
+              console.log(error);
+              setErr("E-Posta veya Şifre yanlış!");
+            }
           });
         }}
       >
-        {({ errors, touched }) => (
-          <Form>
-            <div className="flex flex-col  justify-center">
-              <div className="mt-2 flex flex-col">
-                <label htmlFor="email">E-Posta</label>
-                <Field
-                  className={`input rounded p-3 ${
-                    errors.username && touched.username
-                      ? "input-error"
-                      : "input-success"
-                  }`}
-                  type="text"
-                  name="email"
-                  id="email"
-                  placeholder="Kullanıcı Adı"
-                />
-              </div>
-              <div className="mt-2 flex flex-col">
-                <label htmlFor="password">Şifre</label>
-                <Field
-                  className={`input rounded p-3 ${
-                    errors.password && touched.password
-                      ? "input-error"
-                      : "input-success"
-                  }`}
-                  type="password"
-                  name="password"
-                  id="password"
-                  placeholder="Şifre"
-                  autoComplete="true"
-                />
-              </div>
+        {(formikState) => {
+          const errors = formikState.errors;
+          return (
+            <Form>
+              <div className="flex flex-col  justify-center">
+                <div className="mt-2 flex flex-col">
+                  <span>{err}</span>
+                  <label htmlFor="email">E-Posta</label>
+                  <Field
+                    className={`input rounded p-3 ${
+                      errors.email ? "input-error" : "input-success"
+                    }`}
+                    type="text"
+                    name="email"
+                    id="email"
+                    placeholder="E-Posta"
+                  />
+                  {!!errors.email && (
+                    <label className="label">
+                      <span className="label-text text-error">
+                        {errors.email}
+                      </span>
+                    </label>
+                  )}
+                </div>
+                <div className="mt-2 flex flex-col">
+                  <label htmlFor="password">Şifre</label>
+                  <Field
+                    className={`input rounded p-3 ${
+                      errors.password ? "input-error" : "input-success"
+                    }`}
+                    type="password"
+                    name="password"
+                    id="password"
+                    placeholder="Şifre"
+                    autoComplete="true"
+                  />
+                  {!!errors.password && (
+                    <label className="label">
+                      <span className="label-text text-error">
+                        {errors.password}
+                      </span>
+                    </label>
+                  )}
+                </div>
 
-              <button className="btn mt-2" type="submit">
-                Giriş Yap
-              </button>
-            </div>
-          </Form>
-        )}
-      </Formik>
-      <button
-        type="submit"
-        onClick={() => {
-          void signIn("google", { callbackUrl: "https://localhost:3000" });
+                <button
+                  className={classNames(
+                    "btn mt-2",
+                    errors.password && "btn-disabled",
+                    errors.email && "btn-disabled"
+                  )}
+                  type="submit"
+                >
+                  Giriş Yap
+                </button>
+              </div>
+            </Form>
+          );
         }}
-        className="btn-info btn  mt-2"
-      >
-        Google ile giriş yap
-      </button>
+      </Formik>
       <p className="mt-2 text-center">
         Hesabın yok mu?{" "}
         <Link className="text-blue-700" href={"/auth/register"}>
@@ -105,6 +134,20 @@ const LoginComponent: React.FC = () => {
       </p>
     </>
   );
+};
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const session = await getSession({ req: ctx.req });
+  if (session) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+  return {
+    props: { session },
+  };
 };
 
 export default Login;

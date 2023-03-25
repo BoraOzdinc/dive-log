@@ -27,7 +27,8 @@
     "react-dom": "18.2.0",
     "superjson": "1.9.1",
     "yup": "^1.0.2",
-    "zod": "^3.20.6"
+    "zod": "^3.20.6",
+    "zod-formik-adapter": "^1.2.0"
   },
   "devDependencies": {
     "@types/eslint": "^8.21.1",
