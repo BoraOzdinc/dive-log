@@ -44,22 +44,27 @@ const LoginComponent: React.FC = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [err, setErr] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   return (
     <>
       <Formik
         initialValues={{ email: "", password: "" }}
         validationSchema={toFormikValidationSchema(userSchema)}
         onSubmit={async (values: Values) => {
-          const res = await signIn("credentials", {
+          setIsLoading(true);
+          const signInRes = await signIn("credentials", {
             email: values.email,
             password: values.password,
             redirect: false,
             callbackUrl: "/auth/login",
           });
-          if (res?.error) {
+          if (signInRes?.error) {
+            setIsLoading(false);
             setErr("E-Posta yada Şifre yanlış!");
-          } else if (res?.ok) {
-            setErr("Başarılı Yönlendiriliyorsunuz");
+          } else if (signInRes?.ok) {
+            setErr("Başarılı! Yönlendiriliyorsunuz");
+            router.reload();
           }
         }}
       >
@@ -69,7 +74,11 @@ const LoginComponent: React.FC = () => {
             <Form>
               <div className="flex flex-col  justify-center">
                 <div className="mt-2 flex flex-col">
-                  <span>{err}</span>
+                  {err ? (
+                    <span className="mb-2 rounded bg-error p-2">{err}</span>
+                  ) : (
+                    <></>
+                  )}
                   <label htmlFor="email">E-Posta</label>
                   <Field
                     className={`input rounded p-3 ${
@@ -111,9 +120,10 @@ const LoginComponent: React.FC = () => {
 
                 <button
                   className={classNames(
-                    "btn mt-2",
+                    "btn mt-2 ",
                     errors.password && "btn-disabled",
-                    errors.email && "btn-disabled"
+                    errors.email && "btn-disabled",
+                    isLoading && "btn-disabled loading"
                   )}
                   type="submit"
                 >
