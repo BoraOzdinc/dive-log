@@ -54,45 +54,40 @@ export const authOptions: NextAuthOptions = {
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
     CredentialsProvider({
-    // The name to display on the sign in form (e.g. "Sign in with...")
+
     name: "Credentials",
-    // `credentials` is used to generate a form on the sign in page.
-    // You can specify which fields should be submitted, by adding keys to the `credentials` object.
-    // e.g. domain, username, password, 2FA token, etc.
-    // You can pass any HTML attribute to the <input> tag through the object.
     credentials: {
       
-      username: { label: "Username", type: "text", placeholder: "jsmith" },
+      email: { label: "Username", type: "text", placeholder: "jsmith" },
       password: { label: "Password", type: "password" }
     },
-    async authorize(credentials): Promise<any> {
-    try {
-        const { username, password } = credentials as { username: string; password: string };
-    
-        const response = getUser(username);
-    
-        const { data: { User: { UserId = '', email = '', passwordHash = {} } = {}, statusCode = 0 } = {} } = response;
-    
-        if (statusCode === 200) {
-            return user;
+    async authorize(credentials, req) {
+      try {
+        const { email, password } = credentials as { email: string; password: string };
+
+        // const response = await postFetchNoInterceptor({ fetchData: { email, password }, url: apiAuth });
+
+        // const { data: { body: { message = '', token = '', user = {} } = {}, statusCode = 0 } = {} } = response;
+
+        // if (statusCode === 200) {
+        //     return { ...user, name: user.full_name, token: token };
+        // }
+
+        // throw new Error(message);
+
+        // TEST
+        if (email !== 'boraozdinc@hotmail.com' || password !== '12345678') {
+            throw new Error('Next Auth - Authorize: Authentication error');
         }
-    
-        throw new Error(message);
+
+        // TEST
+        return Promise.resolve({ email: 'boraozdinc@hotmail.com', id: '123', name: 'Kevin Veiga', role: 'user', token: 'poi654çlk' });
     } catch (err) {
         throw new Error('Next Auth - Authorize: Authentication error');
     }
-}
-  })
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
-  ],
+      
+    }
+  })],
 };
 
 /**

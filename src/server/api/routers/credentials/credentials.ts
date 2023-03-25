@@ -3,11 +3,12 @@ import { nonEmptyString,UserId } from "~/utils/zod-utils";
 
 import {
   createTRPCRouter,
+  publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
 
 export const credentialsRouter = createTRPCRouter({
-  RegisterNewUser: protectedProcedure
+  RegisterNewUser: publicProcedure
     .input(
       z.object({
         username: nonEmptyString,

@@ -41,10 +41,10 @@ const LoginComponent: React.FC = () => {
         validationSchema={LoginSchema}
         onSubmit={async (values: Values) => {
           await signIn("credentials", {
-            id: 1,
             username: values.username,
             password: values.password,
             redirect: false,
+            callbackUrl: "/",
           });
         }}
       >
