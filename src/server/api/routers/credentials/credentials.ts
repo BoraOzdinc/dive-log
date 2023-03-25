@@ -1,35 +1,44 @@
 import { z } from "zod";
-import { nonEmptyString } from "~/utils/zod-utils";
+import { nonEmptyString,UserId } from "~/utils/zod-utils";
 
 import {
   createTRPCRouter,
-  publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
 
 export const credentialsRouter = createTRPCRouter({
-  RegisterNewUser: publicProcedure
+  RegisterNewUser: protectedProcedure
     .input(
       z.object({
         username: nonEmptyString,
         email: nonEmptyString,
-        password: nonEmptyString,
+        passwordHash: nonEmptyString,
       })
     )
-    .mutation(({ ctx, input: { username , email , password } }) => {
+    .mutation(({ ctx, input: { username , email , passwordHash } }) => {
       return ctx.prisma.user.create({
         data: {
-          username,
           email,
-          password,
+          username,
+          passwordHash,
         },
       });
     }),
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.example.findMany();
+
+  getAll: protectedProcedure.query(({ ctx }) => {
+    return ctx.prisma.user.findMany();
   }),
 
-  getSecretMessage: protectedProcedure.query(() => {
-    return "you can now see this secret message!";
-  }),
+  getUserById: protectedProcedure
+    .input(UserId)
+    .query(({ ctx, input: id }) => {
+      return ctx.prisma.user.findUnique({
+        where: { id },
+        include: {
+          diverAcc:true
+        },
+      });
+    }),
+
+  
 });

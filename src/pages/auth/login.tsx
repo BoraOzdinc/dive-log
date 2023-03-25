@@ -41,6 +41,7 @@ const LoginComponent: React.FC = () => {
         validationSchema={LoginSchema}
         onSubmit={async (values: Values) => {
           await signIn("credentials", {
+            id: 1,
             username: values.username,
             password: values.password,
             redirect: false,
@@ -76,6 +77,7 @@ const LoginComponent: React.FC = () => {
                   name="password"
                   id="password"
                   placeholder="Şifre"
+                  autoComplete="true"
                 />
               </div>
 

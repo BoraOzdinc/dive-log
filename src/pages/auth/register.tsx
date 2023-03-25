@@ -3,6 +3,7 @@ import { type NextPage } from "next";
 import Link from "next/link";
 import { Layout } from "~/components/Layout";
 import * as Yup from "yup";
+import { useCreateUser } from "~/utils/useAuth";
 
 interface Values {
   username: string;
@@ -31,19 +32,20 @@ const Register: NextPage = () => {
 };
 
 const RegisterComponent: React.FC = () => {
+  const createUser = useCreateUser();
+
   return (
     <>
       <Formik
         initialValues={{ username: "", email: "", password: "" }}
         validationSchema={SignupSchema}
-        onSubmit={(
-          values: Values,
-          { setSubmitting }: FormikHelpers<Values>
-        ) => {
-          setTimeout(() => {
-            alert(JSON.stringify(values, null, 2));
-            setSubmitting(false);
-          }, 500);
+        onSubmit={(values: Values) => {
+          console.log(values);
+          createUser.mutate({
+            username: values.username,
+            email: values.email,
+            passwordHash: values.password,
+          });
         }}
       >
         {({ errors, touched }) => (

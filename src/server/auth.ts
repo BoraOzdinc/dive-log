@@ -9,6 +9,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
+import { getUser, getUsers } from "~/utils/useAuth";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -64,22 +65,23 @@ export const authOptions: NextAuthOptions = {
       username: { label: "Username", type: "text", placeholder: "jsmith" },
       password: { label: "Password", type: "password" }
     },
-    authorize(credentials, req) {
-      // Add logic here to look up the user from the credentials supplied
-      const {password,username} = credentials as {
-        password:string,
-        username:string,
-      }
-
-      if (username !== "boraozdinc" || password !== "1234") {
-        // Any object returned will be saved in `user` property of the JWT
-        throw new Error("invalid credentails")
-      } else
-        // If you return null then an error will be displayed advising the user to check their details.
-        return null
-
-        // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
-      }
+    async authorize(credentials): Promise<any> {
+    try {
+        const { username, password } = credentials as { username: string; password: string };
+    
+        const response = getUser(username);
+    
+        const { data: { User: { UserId = '', email = '', passwordHash = {} } = {}, statusCode = 0 } = {} } = response;
+    
+        if (statusCode === 200) {
+            return user;
+        }
+    
+        throw new Error(message);
+    } catch (err) {
+        throw new Error('Next Auth - Authorize: Authentication error');
+    }
+}
   })
     /**
      * ...add more providers here.
